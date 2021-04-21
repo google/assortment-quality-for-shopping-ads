@@ -1,0 +1,5 @@
+client_secret.json
+credentials.dat
+venv/
+.DS_Store
+.idea/
