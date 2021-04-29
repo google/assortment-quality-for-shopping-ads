@@ -34,6 +34,7 @@ CREATE OR REPLACE VIEW {datasetId}.category_coverage AS (
 
   SELECT
     category_name,
+    brand,
     LENGTH(category_name) - LENGTH(REPLACE(category_name, '>', '')) + 1 as category_level,
     COUNT(1) as total_products,
     COUNT(IF(pi.product_id IS NULL, 1, NULL)) AS missing_products,
@@ -41,5 +42,5 @@ CREATE OR REPLACE VIEW {datasetId}.category_coverage AS (
   FROM best_sellers as bs
   LEFT JOIN inventory as pi
   ON (bs.rank_id = pi.rank_id)
-  GROUP BY 1,2
+  GROUP BY 1,2,3
 )

@@ -104,7 +104,8 @@ class AssortmentQuality:
         Args:
             project_id: The GCP Project ID where the Data Transfer will be created.
             gmc_id: The Google Merchant Center ID from which we will pull out data.
-            region_name: The region name used throughout the process to locate where the data transfer happens.
+            region_name: The region name used throughout the process to locate
+                where the data transfer happens.
             dataset_name: The name of the dataset where the output tables will be stored.
         """
         has_merchant_config = False
@@ -186,7 +187,7 @@ class AssortmentQuality:
 
         Args:
             data_sources: A list of Data Sources that we got from the BigQuery
-            Data Transfer Service.
+                Data Transfer Service.
 
         Returns:
             The Merchant Center source (or None, if none was found)
@@ -217,9 +218,9 @@ class AssortmentQuality:
 
         Args :
             project_id: The GCP project ID where we will query of create
-            the dataset.
+                the dataset.
             dataset_name: The name of the BigQuery dataset that needs to be
-            returned or created.
+                returned or created.
             region_name: The region where the dataset should be located.
 
         Returns :
@@ -259,9 +260,9 @@ class AssortmentQuality:
         Args:
             project_id: The GCP project ID where the view will be created.
             gmc_id: The Google Merchant Center ID from which we will pull data
-             to create the views.
+                to create the views.
             dataset_name: The name of the BigQuery dataset where the views will
-             be created.
+                be created.
         """
         params_replace = {
             'projectId': project_id,
@@ -283,9 +284,9 @@ class AssortmentQuality:
                 logger.debug("View from {0} was created (or updated).".format(view))
             except HttpError:
                 logger.error(f"Failed to create the view from {view}. Since some"
-                             "tables need 90 minutes to be calculated after "
-                             "data transfer creation, please wait (90 minutes) "
-                             "before re-running this script")
+                             "tables need 90 minutes to be calculated after"
+                             " data transfer creation, please wait (90 minutes)"
+                             " before re-running this script")
 
     def configure_sql(self, sql_path: str, query_params: Dict[str, Any]) -> str:
         """Configures parameters of SQL script with variables supplied.
@@ -296,7 +297,7 @@ class AssortmentQuality:
 
         Returns:
             sql_script: String representation of SQL script with parameters
-            assigned.
+                assigned.
         """
         sql_script = self.read_file(sql_path)
 
@@ -316,7 +317,7 @@ class AssortmentQuality:
         Args:
             file_path: File path.
         Returns:
-             content: File content.
+            content: File content.
         Raises:
             FileNotFoundError: If the provided file is not found.
         """
