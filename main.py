@@ -89,12 +89,13 @@ class AssortmentQuality:
         if credentials is None or credentials.invalid:
             credential_flags = argparse.Namespace(
                 noauth_local_webserver=True,
-                logging_level=logger.getLevelName(logger.getLogger().getEffectiveLevel()))
+                logging_level=logging.getLevelName(logger.getEffectiveLevel()))
             credentials = tools.run_flow(flow, storage, flags=credential_flags)
 
         http = credentials.authorize(http=build_http())
 
         self.bqdt_service = discovery.build('bigquerydatatransfer', 'v1', http=http)
+        self.su_service = discovery.build('serviceusage','v1', http=http)
         self.bq_service = discovery.build('bigquery', 'v2', http=http)
 
     def create_merchant_center_data_transfer(self, project_id, gmc_id, region_name, dataset_name):

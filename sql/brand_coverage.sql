@@ -10,7 +10,8 @@ CREATE OR REPLACE VIEW {datasetId}.brand_coverage AS (
     FROM `{projectId}.{datasetId}.BestSellers_TopBrands_{gmcId}` AS tp
     LEFT JOIN tp.ranking_category_path AS rcp
     WHERE
-      rank_timestamp = (SELECT MAX(rank_timestamp) FROM `{datasetId}.BestSellers_TopBrands_{gmcId}`)
+      DATE(_PARTITIONTIME) = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+      AND rank_timestamp = (SELECT MAX(rank_timestamp) FROM `{datasetId}.BestSellers_TopBrands_{gmcId}` WHERE DATE(_PARTITIONTIME) = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)))
       AND ranking_country = 'FR'
       AND rcp.locale IN ('fr-FR', null)
       AND brand IS NOT NULL
@@ -30,7 +31,8 @@ CREATE OR REPLACE VIEW {datasetId}.brand_coverage AS (
       AND tb.ranking_category = tp.ranking_category
       AND tp.rank_timestamp = tb.rank_timestamp
     WHERE
-      tp.rank_timestamp IN (SELECT MAX(rank_timestamp) FROM `{datasetId}.BestSellers_TopProducts_{gmcId}`)
+      DATE(_PARTITIONTIME) = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+      AND tp.rank_timestamp IN (SELECT MAX(rank_timestamp) FROM `{datasetId}.BestSellers_TopProducts_{gmcId}` WHERE DATE(_PARTITIONTIME) = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)))
       AND ranking_country = 'FR'
       AND rcp.locale IN ('fr-FR', null)
       AND tb.brand IS NOT NULL
@@ -38,7 +40,9 @@ CREATE OR REPLACE VIEW {datasetId}.brand_coverage AS (
   inventory AS (
     SELECT DISTINCT rank_id, product_id
     FROM `{datasetId}.BestSellers_TopProducts_Inventory_{gmcId}`
-    WHERE rank_id LIKE (CONCAT((SELECT MAX(CAST(rank_timestamp AS Date)) FROM `{datasetId}.BestSellers_TopProducts_{gmcId}`),':FR:%'))
+    WHERE
+      DATE(_PARTITIONTIME) = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+      AND rank_id LIKE (CONCAT((SELECT MAX(CAST(rank_timestamp AS Date)) FROM `{datasetId}.BestSellers_TopProducts_{gmcId}` WHERE DATE(_PARTITIONTIME) = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) ),':FR:%'))
     AND product_id LIKE '%:FR:%'
   )
 

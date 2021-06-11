@@ -19,7 +19,8 @@ CREATE OR REPLACE VIEW {datasetId}.category_coverage AS (
       tp.ranking_category_path as rcp,
       tp.product_title as pt
       WHERE
-        rank_timestamp = (SELECT MAX(rank_timestamp) FROM `{datasetId}.BestSellers_TopProducts_{gmcId}`)
+        DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+        AND rank_timestamp = (SELECT MAX(rank_timestamp) FROM `{datasetId}.BestSellers_TopProducts_{gmcId}` WHERE DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY))
         AND ranking_country IN ('FR')
         AND rcp.locale IN ('fr-FR')
         AND pt.locale IN ('fr-FR', null, '')
@@ -28,7 +29,9 @@ CREATE OR REPLACE VIEW {datasetId}.category_coverage AS (
   inventory AS (
     SELECT DISTINCT rank_id, product_id, merchant_id, aggregator_id
     FROM `merchant_center.BestSellers_TopProducts_Inventory_124859654`
-    WHERE rank_id LIKE (CONCAT((SELECT MAX(CAST(rank_timestamp AS Date)) FROM `{datasetId}.BestSellers_TopProducts_{gmcId}`),':FR:%'))
+    WHERE
+    DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+    AND rank_id LIKE (CONCAT((SELECT MAX(CAST(rank_timestamp AS Date)) FROM `{datasetId}.BestSellers_TopProducts_{gmcId}` WHERE DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)),':FR:%'))
     AND product_id LIKE '%:FR:%'
   )
 
