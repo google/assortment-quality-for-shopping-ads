@@ -57,8 +57,8 @@ CREATE OR REPLACE VIEW {datasetId}.product_price_competitiveness AS (
     tp.ranking_category_path as rcp,
     tp.product_title as pt
     WHERE
-      DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
-      AND rank_timestamp = (SELECT MAX(rank_timestamp) FROM `{datasetId}.BestSellers_TopProducts_{gmcId}` WHERE DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY))
+      DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)
+      AND rank_timestamp = (SELECT MAX(rank_timestamp) FROM `{datasetId}.BestSellers_TopProducts_{gmcId}` WHERE DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY))
       AND ranking_country IN ('FR')
       AND rcp.locale IN ('fr-FR')
       AND pt.locale IN ('fr-FR', null, '')
@@ -68,8 +68,8 @@ CREATE OR REPLACE VIEW {datasetId}.product_price_competitiveness AS (
     SELECT DISTINCT rank_id, product_id, merchant_id, aggregator_id
     FROM `{datasetId}.BestSellers_TopProducts_Inventory_{gmcId}`
     WHERE 
-    DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
-    AND rank_id LIKE (CONCAT((SELECT MAX(CAST(rank_timestamp AS Date)) FROM `{datasetId}.BestSellers_TopProducts_{gmcId}` WHERE DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)),':FR:%'))
+    DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)
+    AND rank_id LIKE (CONCAT((SELECT MAX(CAST(rank_timestamp AS Date)) FROM `{datasetId}.BestSellers_TopProducts_{gmcId}` WHERE DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)),':FR:%'))
     AND product_id LIKE '%:FR:%'
   )
 
