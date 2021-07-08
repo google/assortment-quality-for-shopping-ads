@@ -3,3 +3,4 @@ credentials.dat
 venv/
 .DS_Store
 .idea/
+copybara_git_credentials
