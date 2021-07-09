@@ -77,16 +77,24 @@ class AssortmentQuality:
             required=True,
             type=str,
             help='an existing BigQuery dataset name')
+        parser.add_argument(
+            '-l',
+            '--language',
+            required=True,
+            type=str,
+            help='the language that will be used in the final template'
+                 ' (ie. en-US)')
         args = parser.parse_args()
 
         project_id = args.project_id
         gmc_id = args.gmc_id
         region_name = args.region
         dataset_name = args.dataset
+        language = args.language
 
         self.authenticate()
         self.create_merchant_center_data_transfer(project_id, gmc_id, region_name, dataset_name)
-        self.check_existing_custom_data_transfers(project_id, gmc_id, region_name, dataset_name)
+        self.check_existing_custom_data_transfers(project_id, gmc_id, region_name, dataset_name, language)
 
     def authenticate(self):
         """
@@ -311,7 +319,7 @@ class AssortmentQuality:
         else:
             return content
 
-    def check_existing_custom_data_transfers(self, project_id, gmc_id, region_name, dataset_name):
+    def check_existing_custom_data_transfers(self, project_id, gmc_id, region_name, dataset_name, language):
         """Creates Custom Data Transfers from the provided set of SQL scripts.
        Args:
            project_id: The GCP project ID where the view will be created.
@@ -326,7 +334,8 @@ class AssortmentQuality:
         params_replace = {
             'projectId': project_id,
             'gmcId': gmc_id,
-            'datasetId': dataset_name
+            'datasetId': dataset_name,
+            'language': language
         }
 
         for job in SQL_QUERIES:

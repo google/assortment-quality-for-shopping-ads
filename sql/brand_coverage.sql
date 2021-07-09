@@ -20,7 +20,7 @@ WITH top_brands AS (
         rank_id,
         rank,
         ranking_category,
-        (SELECT name FROM tp.ranking_category_path WHERE locale = 'fr-FR') as category_name,
+        (SELECT name FROM tp.ranking_category_path WHERE locale = '{language}') as category_name,
         brand,
     FROM `{projectId}.{datasetId}.BestSellers_TopBrands_{gmcId}` AS tp
     LEFT JOIN tp.ranking_category_path AS rcp
@@ -34,7 +34,7 @@ products_in_brand AS (
     SELECT DISTINCT
         tp.rank_timestamp,
         tb.ranking_category,
-        (SELECT name FROM tp.ranking_category_path WHERE locale = 'fr-FR') as ranking_category_name,
+        (SELECT name FROM tp.ranking_category_path WHERE locale = '{language}') as ranking_category_name,
         tb.category_name,
         tb.brand,
         tp.rank_id,
