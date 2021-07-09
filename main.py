@@ -41,6 +41,8 @@ SQL_QUERIES = [
     'product_price_competitiveness.sql'
 ]
 
+TABLE_EXPIRATION = 7 * 24 * 60 * 60 * 1000 # 7 days in milliseconds
+
 MAX_RETRIES = 3
 
 logger = logging.getLogger(__name__)
@@ -253,7 +255,8 @@ class AssortmentQuality:
                 'datasetReference':
                     {'projectId': project_id,
                      'datasetId': dataset_name},
-                'location': region_name
+                'location': region_name,
+                'defaultTableExpirationMs': TABLE_EXPIRATION
             }
 
             dataset = (self.bq_service
