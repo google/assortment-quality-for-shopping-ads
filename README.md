@@ -9,6 +9,9 @@ Google Merchant center account.
 
 Google Cloud Platform with BigQuery and BigQuery Data Transfer access
 
+> It is assumed that the user is familiar with Google Cloud
+> Platform
+
 ## Pre-requisites
 
 - BQ Command line OR activate the API from the Console UI

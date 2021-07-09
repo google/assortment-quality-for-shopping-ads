@@ -34,10 +34,11 @@ SCOPES = [
     'https://www.googleapis.com/auth/bigquery',
 ]
 
-SQL_VIEWS = [
+SQL_QUERIES = [
     'brand_coverage.sql',
     'category_coverage.sql',
-    'product_coverage.sql'
+    'product_coverage.sql',
+    'product_price_competitiveness.sql'
 ]
 
 MAX_RETRIES = 3
@@ -83,7 +84,7 @@ class AssortmentQuality:
 
         self.authenticate()
         self.create_merchant_center_data_transfer(project_id, gmc_id, region_name, dataset_name)
-        self.create_custom_views(project_id, gmc_id, dataset_name)
+        self.check_existing_custom_data_transfers(project_id, gmc_id, region_name, dataset_name)
 
     def authenticate(self):
         """
@@ -125,7 +126,7 @@ class AssortmentQuality:
         """
         has_merchant_config = False
         transfer_display_name = f'Merchant Center Data Transfer for merchant {gmc_id}'
-        project_location = f'projects/{project_id}/locations/eu'
+        project_location = f'projects/{project_id}/locations/{region_name}'
         transfer_configs = (self.bqdt_service.projects()
                             .locations()
                             .transferConfigs()
@@ -165,15 +166,13 @@ class AssortmentQuality:
                                .execute())
                 logger.info(f'Valid Credentials found ? {valid_creds.get("hasValidCreds")}')
 
-                raise
-
             self.check_or_create_dataset(project_id, dataset_name, region_name)
 
             body = {
                 'name': f'projects/{project_id}/locations/{region_name}/transferConfigs/',
                 'displayName': transfer_display_name,
                 'dataSourceId': 'merchant_center',
-                'schedule': 'every 24 hours',
+                'schedule': 'every 72 hours',
                 'disabled': 'false',
                 'destinationDatasetId': f'{dataset_name}',
                 'params': {
@@ -208,7 +207,6 @@ class AssortmentQuality:
             The Merchant Center source (or None, if none was found)
         """
         for source in data_sources:
-            logger.debug(data_sources.get(source))
             for s in data_sources.get(source):
                 if s.get('dataSourceId') == 'merchant_center':
                     return s
@@ -269,40 +267,6 @@ class AssortmentQuality:
 
         return dataset
 
-    def create_custom_views(self, project_id, gmc_id, dataset_name):
-        """Creates BigQuery views from the provided set of SQL scripts.
-
-        Args:
-            project_id: The GCP project ID where the view will be created.
-            gmc_id: The Google Merchant Center ID from which we will pull data
-                to create the views.
-            dataset_name: The name of the BigQuery dataset where the views will
-                be created.
-        """
-        params_replace = {
-            'projectId': project_id,
-            'gmcId': gmc_id,
-            'datasetId': dataset_name
-        }
-
-        for view in SQL_VIEWS:
-            query_view = self.configure_sql(os.path.join('sql', view), params_replace)
-            try:
-                (self.bq_service
-                    .jobs()
-                    .query(projectId=project_id,
-                           body={
-                               'query': query_view,
-                               'useLegacySql': False
-                           })
-                    .execute(num_retries=MAX_RETRIES))
-                logger.debug("View from {0} was created (or updated).".format(view))
-            except HttpError:
-                logger.error(f"Failed to create the view from {view}. Since some"
-                             "tables need 90 minutes to be calculated after"
-                             " data transfer creation, please wait (90 minutes)"
-                             " before re-running this script")
-
     def configure_sql(self, sql_path: str, query_params: Dict[str, Any]) -> str:
         """Configures parameters of SQL script with variables supplied.
 
@@ -343,6 +307,84 @@ class AssortmentQuality:
             raise FileNotFoundError(f'The file "{file_path}" could not be found.')
         else:
             return content
+
+    def check_existing_custom_data_transfers(self, project_id, gmc_id, region_name, dataset_name):
+        """Creates Custom Data Transfers from the provided set of SQL scripts.
+       Args:
+           project_id: The GCP project ID where the view will be created.
+           gmc_id: The Google Merchant Center ID from which we will pull data
+               to create the views.
+           region_name : The region name used throughout the process to locate
+                where the data transfer happens.
+           dataset_name: The name of the BigQuery dataset where the views will
+               be created.
+       """
+
+        params_replace = {
+            'projectId': project_id,
+            'gmcId': gmc_id,
+            'datasetId': dataset_name
+        }
+
+        for job in SQL_QUERIES:
+            job_name = job.split('.')[0]
+            scheduled_query_name = f'Scheduled query : {job_name}'
+            query_view = self.configure_sql(os.path.join('sql', job), params_replace)
+            project_location = f'projects/{project_id}/locations/{region_name}'
+            scheduled_query_already_exists = False
+
+            transfer_config_list = (self.bqdt_service.projects()
+                                    .locations()
+                                    .transferConfigs()
+                                    .list(parent=project_location)
+                                    .execute(num_retries=MAX_RETRIES))
+
+            transfer_configs = transfer_config_list.get('transferConfigs') or []
+
+            for tc in transfer_configs:
+                if tc['dataSourceId'] == 'scheduled_query' and tc['displayName'] == scheduled_query_name:
+                    scheduled_query_already_exists = True
+                    logger.info('There is an existing Scheduled Query called:'
+                                f' {scheduled_query_name}.\n'
+                                '  If you want to replace it, please delete'
+                                ' it from the UI and re-run this script.\n')
+
+            if not scheduled_query_already_exists:
+                self.create_scheduled_query(project_id, region_name, job_name, dataset_name, query_view, project_location)
+
+    def create_scheduled_query(self, project_id, region_name, job_name, dataset_name, query_view, project_location):
+        body = {
+            'name': f'projects/{project_id}/locations/{region_name}/transferConfigs/',
+            'displayName': f'Scheduled query : {job_name}',
+            'dataSourceId': 'scheduled_query',
+            'schedule': 'every 24 hours',
+            'disabled': 'false',
+            'destinationDatasetId': f'{dataset_name}',
+            'params': {
+                'query': query_view,
+                'destination_table_name_template': job_name,
+                'write_disposition': 'WRITE_TRUNCATE',
+                'partitioning_field': '',
+            }
+        }
+
+        dt_response = self.bqdt_service.projects() \
+            .locations() \
+            .transferConfigs() \
+            .create(parent=project_location, body=body)
+
+        try:
+            logger.info(f'Creating new Scheduled Query : {job_name}')
+            dt_response.execute()
+        except HttpError as err:
+            logger.error(f'Please check that your BigQuery dataset already'
+                         f' exists and that your Project Id and Region Name'
+                         f' are correctly typed. If this is the first time '
+                         f'you create a Scheduled Query on this project, '
+                         f'try to create a dummy one from the UI (this '
+                         f'should trigger a OAuth consent screen), then '
+                         f'everything will work fine. '
+                         f'\nError was :\n {err}')
 
 
 if __name__ == '__main__':
