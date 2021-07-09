@@ -36,8 +36,8 @@ WITH best_sellers AS (
     WHERE
         DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
         AND rank_timestamp = (SELECT MAX(rank_timestamp) FROM `{projectId}.{datasetId}.BestSellers_TopProducts_{gmcId}` WHERE DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY))
-        AND ranking_country IN ('FR')
-        AND rank_id LIKE '%:FR:%'
+        AND ranking_country IN ('{country}')
+        AND rank_id LIKE '%:{country}:%'
 ),
 inventory AS (
     SELECT DISTINCT
@@ -48,8 +48,8 @@ inventory AS (
     FROM `{projectId}.{datasetId}.BestSellers_TopProducts_Inventory_{gmcId}`
     WHERE
         DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
-        AND rank_id LIKE (CONCAT((SELECT MAX(CAST(rank_timestamp AS Date)) FROM `{projectId}.{datasetId}.BestSellers_TopProducts_{gmcId}` WHERE DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)),':FR:%'))
-        AND product_id LIKE '%:FR:%'
+        AND rank_id LIKE (CONCAT((SELECT MAX(CAST(rank_timestamp AS Date)) FROM `{projectId}.{datasetId}.BestSellers_TopProducts_{gmcId}` WHERE DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)),':{country}:%'))
+        AND product_id LIKE '%:{country}:%'
 ),
 best_sellers_with_inventory AS (
     SELECT

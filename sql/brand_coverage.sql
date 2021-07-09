@@ -47,7 +47,7 @@ products_in_brand AS (
     WHERE
         DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
         AND tp.rank_timestamp = (SELECT MAX(rank_timestamp) FROM `{projectId}.{datasetId}.BestSellers_TopProducts_{gmcId}` WHERE DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY))
-        AND ranking_country = 'FR'
+        AND ranking_country = '{country}'
         AND tb.brand IS NOT NULL
 ),
 inventory AS (
@@ -57,8 +57,8 @@ inventory AS (
     FROM `{projectId}.{datasetId}.BestSellers_TopProducts_Inventory_{gmcId}`
     WHERE
         DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
-        AND rank_id LIKE (CONCAT((SELECT MAX(CAST(rank_timestamp AS Date)) FROM `{projectId}.{datasetId}.BestSellers_TopProducts_{gmcId}` WHERE DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) ),':FR:%'))
-        AND product_id LIKE '%:FR:%'
+        AND rank_id LIKE (CONCAT((SELECT MAX(CAST(rank_timestamp AS Date)) FROM `{projectId}.{datasetId}.BestSellers_TopProducts_{gmcId}` WHERE DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) ),':{country}:%'))
+        AND product_id LIKE '%:{country}:%'
 )
 
 SELECT

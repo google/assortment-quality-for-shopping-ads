@@ -84,6 +84,12 @@ class AssortmentQuality:
             type=str,
             help='the language that will be used in the final template'
                  ' (ie. en-US)')
+        parser.add_argument(
+            '-c',
+            '--country',
+            required=True,
+            type=str,
+            help='the country on which the rankings will be calculated')
         args = parser.parse_args()
 
         project_id = args.project_id
@@ -91,10 +97,11 @@ class AssortmentQuality:
         region_name = args.region
         dataset_name = args.dataset
         language = args.language
+        country = args.country
 
         self.authenticate()
         self.create_merchant_center_data_transfer(project_id, gmc_id, region_name, dataset_name)
-        self.check_existing_custom_data_transfers(project_id, gmc_id, region_name, dataset_name, language)
+        self.check_existing_custom_data_transfers(project_id, gmc_id, region_name, dataset_name, language, country)
 
     def authenticate(self):
         """
@@ -319,7 +326,7 @@ class AssortmentQuality:
         else:
             return content
 
-    def check_existing_custom_data_transfers(self, project_id, gmc_id, region_name, dataset_name, language):
+    def check_existing_custom_data_transfers(self, project_id, gmc_id, region_name, dataset_name, language, country):
         """Creates Custom Data Transfers from the provided set of SQL scripts.
        Args:
            project_id: The GCP project ID where the view will be created.
@@ -335,7 +342,8 @@ class AssortmentQuality:
             'projectId': project_id,
             'gmcId': gmc_id,
             'datasetId': dataset_name,
-            'language': language
+            'language': language,
+            'country' : country
         }
 
         for job in SQL_QUERIES:
