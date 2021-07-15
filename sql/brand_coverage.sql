@@ -27,7 +27,7 @@ WITH top_brands AS (
     WHERE
         DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
         AND rank_timestamp = (SELECT MAX(rank_timestamp) FROM `{projectId}.{datasetId}.BestSellers_TopBrands_{gmcId}` WHERE DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY))
-        AND ranking_country = 'FR'
+        AND ranking_country = '{country}'
         AND brand IS NOT NULL
 ),
 products_in_brand AS (
