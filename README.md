@@ -20,8 +20,14 @@ Google Cloud Platform with BigQuery and BigQuery Data Transfer access
 ## Installation
 
 - Clone this repo locally or use our Colab notebook
-- Run ``python main.py -p [project_id] -m [merchant_id] -r [region_name] -d [dataset_name]`` (all parameters are
-  mandatory)
+- Run the following command :
+```bash
+python main.py
+  -p project_id] -m [merchant_id] -r [region_name] 
+  -d [dataset_name] -l [language] -c [country] (all parameters are mandatory)
+```
+  
+
 
 ## Authors
 
