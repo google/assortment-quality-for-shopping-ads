@@ -19,19 +19,20 @@ Google Cloud Platform with BigQuery and BigQuery Data Transfer access
 
 ## Installation
 
-- Clone this repo locally or use our Colab notebook
+- Clone this repo locally or use our
+  [Colab notebook](https://colab.research.google.com/github/google/assortment-quality-for-google-shopping/blob/main/Colab%20-%20Setup%20Guide.ipynb)
 - Run the following command :
 ```bash
 python main.py
-  -p project_id] -m [merchant_id] -r [region_name] 
+  -p project_id] -m [merchant_id] -r [region_name]
   -d [dataset_name] -l [language] -c [country] (all parameters are mandatory)
 ```
-  
+
 
 
 ## Authors
 
- - [fraperez@](mailto:fraperez@google.com)
+ - [François Pérez](mailto:fraperez@google.com)
 
 ## Licensing
 
