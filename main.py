@@ -350,7 +350,8 @@ class AssortmentQuality:
 
         for job in SQL_QUERIES:
             job_name = job.split('.')[0]
-            scheduled_query_name = f'Scheduled query : {job_name}'
+            scheduled_query_name = f'{job_name} for merchant {gmc_id} - ' \
+                                   f'language {language} - country {country}'
             query_view = self.configure_sql(os.path.join('sql', job), params_replace)
             project_location = f'projects/{project_id}/locations/{region_name}'
             scheduled_query_already_exists = False
