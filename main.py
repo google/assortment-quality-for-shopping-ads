@@ -41,8 +41,6 @@ SQL_QUERIES = [
     'product_price_competitiveness.sql'
 ]
 
-TABLE_EXPIRATION = 7 * 24 * 60 * 60 * 1000 # 7 days in milliseconds
-PARTITION_EXPIRATION = 7 * 24 * 60 * 60 * 1000 # 7 days in milliseconds
 
 MAX_RETRIES = 3
 
@@ -91,6 +89,12 @@ class AssortmentQuality:
             required=True,
             type=str,
             help='the country on which the rankings will be calculated')
+        parser.add_argument(
+            '-e',
+            '--expiration_time',
+            required=True,
+            type=int,
+            help='number of days before the SQL table partitions expire')
         args = parser.parse_args()
 
         project_id = args.project_id
@@ -99,9 +103,10 @@ class AssortmentQuality:
         dataset_name = args.dataset
         language = args.language
         country = args.country
+        expiration_time = args.expiration_time
 
         self.authenticate()
-        self.create_merchant_center_data_transfer(project_id, gmc_id, region_name, dataset_name)
+        self.create_merchant_center_data_transfer(project_id, gmc_id, region_name, dataset_name, expiration_time)
         self.check_existing_custom_data_transfers(project_id, gmc_id, region_name, dataset_name, language, country)
 
     def authenticate(self):
@@ -131,7 +136,7 @@ class AssortmentQuality:
         self.su_service = discovery.build('serviceusage','v1', http=http)
         self.bq_service = discovery.build('bigquery', 'v2', http=http)
 
-    def create_merchant_center_data_transfer(self, project_id, gmc_id, region_name, dataset_name):
+    def create_merchant_center_data_transfer(self, project_id, gmc_id, region_name, dataset_name, expiration_time):
         """
         Creates (or reuses) a Merchant Center Data Transfer into BigQuery
 
@@ -184,7 +189,7 @@ class AssortmentQuality:
                                .execute())
                 logger.info(f'Valid Credentials found ? {valid_creds.get("hasValidCreds")}')
 
-            self.check_or_create_dataset(project_id, dataset_name, region_name)
+            self.check_or_create_dataset(project_id, dataset_name, region_name, expiration_time)
 
             body = {
                 'name': f'projects/{project_id}/locations/{region_name}/transferConfigs/',
@@ -243,7 +248,7 @@ class AssortmentQuality:
             if source.get('id') == f"{project_id}:{dataset_name}":
                 return source
 
-    def check_or_create_dataset(self, project_id, dataset_name, region_name):
+    def check_or_create_dataset(self, project_id, dataset_name, region_name, expiration_time):
         """
         Checks if a provided datasets exists, and creates it if not.
 
@@ -267,12 +272,12 @@ class AssortmentQuality:
 
         # If it doesn't, we create it.
         if dataset is None:
+            PARTITION_EXPIRATION = expiration_time * 24 * 60 * 60 * 1000  # 7 days in milliseconds
             body = {
                 'datasetReference':
                     {'projectId': project_id,
                      'datasetId': dataset_name},
                 'location': region_name,
-                'defaultTableExpirationMs': TABLE_EXPIRATION,
                 'defaultPartitionExpirationMs': PARTITION_EXPIRATION
             }
 

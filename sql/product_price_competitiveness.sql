@@ -22,8 +22,8 @@ WITH products_from_feed AS (
         gtin
     FROM `{datasetId}.Products_{gmcId}`
     WHERE
-        _PARTITIONTIME = (SELECT MAX(_PARTITIONTIME) FROM `{datasetId}.Products_{gmcId}`)
-        AND product_data_timestamp = (SELECT MAX(product_data_timestamp) FROM `{datasetId}.Products_{gmcId}`)
+        _PARTITIONTIME = (SELECT MAX(_PARTITIONTIME) FROM `{projectId}.{datasetId}.Products_{gmcId}`)
+        AND product_data_timestamp = (SELECT MAX(product_data_timestamp) FROM `{projectId}.{datasetId}.Products_{gmcId}`)
 ),
 price_benchmark AS (
     SELECT
@@ -32,10 +32,10 @@ price_benchmark AS (
         price_benchmark_value,
         price_benchmark_currency,
         price_benchmark_timestamp
-    FROM `{datasetId}.Products_PriceBenchmarks_{gmcId}`
+    FROM `{projectId}.{datasetId}.Products_PriceBenchmarks_{gmcId}`
     WHERE
-        _PARTITIONTIME = (SELECT MAX(_PARTITIONTIME) FROM `{datasetId}.Products_PriceBenchmarks_{gmcId}`)
-        AND price_benchmark_timestamp = (SELECT MAX(price_benchmark_timestamp) FROM `{datasetId}.Products_PriceBenchmarks_{gmcId}`)
+        _PARTITIONTIME = (SELECT MAX(_PARTITIONTIME) FROM `{projectId}.{datasetId}.Products_PriceBenchmarks_{gmcId}`)
+        AND price_benchmark_timestamp = (SELECT MAX(price_benchmark_timestamp) FROM `{projectId}.{datasetId}.Products_PriceBenchmarks_{gmcId}`)
         AND country_of_sale  = '{country}'
 ),
 best_sellers AS (
