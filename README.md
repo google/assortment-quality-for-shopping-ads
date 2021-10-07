@@ -25,7 +25,7 @@ Google Cloud Platform with BigQuery and BigQuery Data Transfer access
 ```bash
 python main.py
   -p project_id] -m [merchant_id] -r [region_name]
-  -d [dataset_name] -l [language] -c [country]
+  -d [dataset_name] -l [language] -c [country] -e [expiration_time]
 ```
 
 
