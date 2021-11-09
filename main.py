@@ -51,7 +51,7 @@ logger.setLevel(logging.DEBUG)
 
 class AssortmentQuality:
     def main(self):
-        parser = argparse.ArgumentParser()
+        parser = argparse.ArgumentParser() 
         parser.add_argument(
             '-p',
             '--project_id',
