@@ -53,12 +53,13 @@ products_in_brand AS (
 inventory AS (
     SELECT DISTINCT
         rank_id,
-        product_id
+        ARRAY_AGG(product_id) AS product_id
     FROM `{projectId}.{datasetId}.BestSellers_TopProducts_Inventory_{gmcId}`
     WHERE
         DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
         AND rank_id LIKE (CONCAT((SELECT MAX(CAST(rank_timestamp AS Date)) FROM `{projectId}.{datasetId}.BestSellers_TopProducts_{gmcId}` WHERE DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) ),':{country}:%'))
         AND product_id LIKE '%:{country}:%'
+    GROUP BY 1
 )
 
 SELECT
@@ -70,9 +71,9 @@ SELECT
     - LENGTH(REPLACE(pib.ranking_category_name,'>',''))
     ) + 1 AS category_level,
     pib.brand,
-    COUNT(tpi.rank_id) AS products_in_inventory,
-    COUNT(pib.rank_id) as number_of_products,
-    COUNT(tpi.rank_id) / COUNT(pib.rank_id) as assortment
+    COUNTIF(ARRAY_LENGTH(tpi.product_id) > 0) AS products_in_inventory,
+    COUNT(1) as number_of_products,
+    COUNTIF(ARRAY_LENGTH(tpi.product_id) > 0) / COUNT(1) as assortment
 FROM products_in_brand AS pib
 LEFT JOIN inventory tpi
     ON pib.rank_id = tpi.rank_id

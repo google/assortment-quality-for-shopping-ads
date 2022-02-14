@@ -62,7 +62,7 @@ best_sellers_with_inventory AS (
     FROM best_sellers as bs
     LEFT JOIN inventory as pi
         ON (bs.rank_id = pi.rank_id)
-    GROUP BY 1,2,3,4,5
+    GROUP BY 1,2,3,4
 )
 
 SELECT
@@ -71,7 +71,8 @@ SELECT
     relative_demand_bucket,
     LENGTH(category_name) - LENGTH(REPLACE(category_name, '>', '')) + 1 as category_level,
     COUNT(DISTINCT rank_id) as total_products,
-    COUNT(IF(product_id IS NULL OR ARRAY_LENGTH(product_id) = 0, 1, NULL)) AS missing_products,
-    COUNT(IF(ARRAY_LENGTH(product_id)>0, 1, NULL)) AS available_products,
+    COUNTIF(product_id IS NULL OR ARRAY_LENGTH(product_id) = 0) AS missing_products,
+    COUNTIF(ARRAY_LENGTH(product_id)>0) AS available_products,
 FROM best_sellers_with_inventory
-GROUP BY 1,2,3,4
+GROUP BY 1,2,3
+
