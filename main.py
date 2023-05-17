@@ -13,20 +13,24 @@
 # limitations under the License.
 
 import os
+import sys
 import logging
 import argparse
 from typing import Any
 from typing import Dict
+from colorama import Fore, Style
 
+from urllib import parse
 from googleapiclient import discovery
-from googleapiclient.http import build_http
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
 from googleapiclient.errors import HttpError
-from oauth2client import file
-from oauth2client import tools
-from oauth2client import client
 
 DATA_STUDIO_TEMPLATE_ID = '53894476-b1df-4cd5-85c7-2636fc0e6025'
 
+INVALID_REDIRECT_URI = "http://localhost:5678"
 CREDENTIALS_STORAGE = 'credentials.dat'
 CLIENT_SECRETS_FILE = 'client_secret.json'
 SCOPES = [
@@ -43,6 +47,7 @@ SQL_QUERIES = [
 
 
 MAX_RETRIES = 3
+TOKEN_FILE = "token.json"
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
@@ -116,25 +121,49 @@ class AssortmentQuality:
         client_secrets = os.path.join(
             os.path.dirname(__file__), CLIENT_SECRETS_FILE)
 
-        flow = client.flow_from_clientsecrets(
-            client_secrets,
-            SCOPES,
-            message=tools.message_if_missing(client_secrets))
+        creds = None
 
-        storage = file.Storage(CREDENTIALS_STORAGE)
-        credentials = storage.get()
+        if os.path.exists(TOKEN_FILE):
+            creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    client_secrets, SCOPES)
+                flow.redirect_uri = INVALID_REDIRECT_URI
+                auth_url, _ = flow.authorization_url(prompt="consent")
 
-        if credentials is None or credentials.invalid:
-            credential_flags = argparse.Namespace(
-                noauth_local_webserver=True,
-                logging_level=logging.getLevelName(logger.getEffectiveLevel()))
-            credentials = tools.run_flow(flow, storage, flags=credential_flags)
+                print(
+                    f"\n{Fore.GREEN}Please visit the following URL to"
+                    " authorize this application:"
+                )
+                print(f"\n{Style.BRIGHT}{auth_url}{Style.NORMAL}\n")
+                print(
+                    "After allowing the application access, your browser should"
+                    " redirect to an invalid URL. Copy that URL from the address bar"
+                    " and paste it here to extract the necessary authorization"
+                    f" code.{Style.RESET_ALL}\n"
+                )
 
-        http = credentials.authorize(http=build_http())
+                url = input("Please enter the URL: ").strip()
+                code = parse.parse_qs(parse.urlparse(url).query)["code"][0]
 
-        self.bqdt_service = discovery.build('bigquerydatatransfer', 'v1', http=http)
-        self.su_service = discovery.build('serviceusage','v1', http=http)
-        self.bq_service = discovery.build('bigquery', 'v2', http=http)
+                print()
+
+                try:
+                    flow.fetch_token(code=code)
+                    creds = flow.credentials
+                except InvalidGrantError as e:
+                    logging.error(f"Authentication has failed: {e}")
+                    sys.exit(1)
+            with open(TOKEN_FILE, "w") as token:
+                token.write(creds.to_json())
+                logging.info(f"Succesfully created an authorization token.")
+
+        self.bqdt_service = discovery.build('bigquerydatatransfer', 'v1', credentials=creds)
+        self.su_service = discovery.build('serviceusage','v1', credentials=creds)
+        self.bq_service = discovery.build('bigquery', 'v2', credentials=creds)
 
     def create_merchant_center_data_transfer(self, project_id, gmc_id, region_name, dataset_name, expiration_time):
         """
