@@ -51,7 +51,7 @@ products_in_brand AS (
         AND tb.brand IS NOT NULL
 ),
 inventory AS (
-    SELECT DISTINCT
+    SELECT
         rank_id,
         ARRAY_AGG(product_id) AS product_id
     FROM `{projectId}.{datasetId}.BestSellers_TopProducts_Inventory_{gmcId}`

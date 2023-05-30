@@ -62,7 +62,7 @@ best_sellers_with_inventory AS (
     FROM best_sellers as bs
     LEFT JOIN inventory as pi
         ON (bs.rank_id = pi.rank_id)
-    GROUP BY 1,2,3,4
+    GROUP BY 1,2,3,4,5
 )
 
 SELECT
