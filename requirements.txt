@@ -1,5 +1,5 @@
 cachetools==4.2.1
-certifi==2020.12.5
+certifi==2023.7.22
 chardet==4.0.0
 google-api-core==1.26.3
 google-api-python-client==2.1.0
